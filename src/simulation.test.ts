@@ -19,6 +19,7 @@ const colony = (overrides: Partial<ColonyState> = {}): ColonyState => ({
   dwarves: [],
   activities: [],
   activityCount: 0,
+  expeditions: [],
   ...overrides,
 });
 

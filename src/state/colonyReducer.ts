@@ -8,9 +8,9 @@ export type ColonyAction =
   | { type: "dayPassed" }
   | { type: "dwarfAssigned"; dwarfId: string; assignment: JobType }
   | { type: "toolCrafted" }
-  | { type: "expeditionDeparted"; dwarfId: string; destination: string }
-  | { type: "expeditionSucceeded"; dwarfId: string; result: ExpeditionResult }
-  | { type: "expeditionFailed"; dwarfId: string; reason: string }
+  | { type: "expeditionDeparted"; expeditionId: string; dwarfId: string; destination: string }
+  | { type: "expeditionSucceeded"; expeditionId: string; result: ExpeditionResult }
+  | { type: "expeditionFailed"; expeditionId: string; reason: string }
   | { type: "activityAcknowledged"; activityId: string }
   | { type: "colonyRestarted" };
 
@@ -33,12 +33,12 @@ export function colonyReducer(state: ColonyState, action: ColonyAction): ColonyS
       return assignDwarf(state, action.dwarfId, action.assignment);
     case "toolCrafted":
       return craftTool(state);
-    case "expeditionDeparted":
-      return departOnExpedition(state, action.dwarfId, action.destination);
+        case "expeditionDeparted":
+      return departOnExpedition(state, action.expeditionId, action.dwarfId, action.destination);
     case "expeditionSucceeded":
-      return completeExpedition(state, action.dwarfId, action.result);
+      return completeExpedition(state, action.expeditionId, action.result);
     case "expeditionFailed":
-      return failExpedition(state, action.dwarfId, action.reason);
+      return failExpedition(state, action.expeditionId, action.reason);
   }
 }
 
@@ -89,4 +89,5 @@ export const initialColony: ColonyState = {
     },
   ],
   activityCount: 0,
+  expeditions: [],
 };

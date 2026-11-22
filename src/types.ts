@@ -41,6 +41,16 @@ export interface ColonyState {
     activities: Activity[];
     /** Number of chronicle entries ever written. Gives every entry a unique, predictable id. */
     activityCount: number;
+    /** D4: expeditions that have left and are still waiting for an answer. */
+    expeditions: PendingExpedition[];
+}
+
+/** D4: one expedition on its way. Its id lets us apply the answer exactly once. */
+export interface PendingExpedition {
+    id: string;
+    dwarfId: string;
+    destination: string;
+    departedDay: number;
 }
 
 export interface ExpeditionResult {

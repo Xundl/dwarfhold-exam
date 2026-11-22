@@ -15,7 +15,7 @@ export function ColonyPage() {
   const {
     colony,
     activities,
-    expeditionPending,
+    //expeditionPending,
     assignDwarf,
     sendExpedition,
     acknowledgeActivity,
@@ -33,6 +33,7 @@ export function ColonyPage() {
 
   const scout = colony.dwarves.find((dwarf) => dwarf.id === expeditionDwarf);
   const scoutAvailable = scout !== undefined && isAvailable(scout);
+  const scoutAway = scout?.status === "expedition";
 
   return (
     <div className="dashboard">
@@ -158,14 +159,15 @@ export function ColonyPage() {
           </label>
 
           <button
-            disabled={expeditionPending || !scoutAvailable}
+            disabled={!scoutAvailable}
             onClick={() => sendExpedition(expeditionDwarf, destination)}
           >
-            {expeditionPending ? "Beyond the gate…" : "Send expedition"}
+            {scoutAway ? "Beyond the gate…" : "Send expedition"}
           </button>
           <p>
-            A result returns in one request. The selected dwarf is unavailable
-            while travelling.
+            The selected dwarf is unavailable while travelling. Several dwarves
+            may travel at once, but each only once. With no answer after 10
+            seconds the expedition fails: no rewards, and the dwarf returns home.
           </p>
         </section>
 

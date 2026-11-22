@@ -5,7 +5,7 @@ export interface ColonyContextValue {
   colony: ColonyState;
   paused: boolean;
   activities: Activity[];
-  expeditionPending: boolean;
+  //expeditionPending: boolean;
   togglePaused: () => void;
   assignDwarf: (id: string, assignment: JobType) => void;
   craftTool: () => void;
