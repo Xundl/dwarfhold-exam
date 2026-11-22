@@ -1,14 +1,14 @@
 import { acknowledgeActivity, awaitingAcknowledgement } from "../activityLog";
 import { completeExpedition, departOnExpedition, failExpedition } from "../expeditions";
 import { equipTool, returnTool } from "../equipment";
-import { craft, type RecipeId } from "../forge";
+import { startCrafting, type RecipeId } from "../forge";
 import { advanceDay, assignDwarf, hasStarved } from "../simulation";
 import type { ColonyState, ExpeditionResult, JobType } from "../types";
 
 export type ColonyAction =
   | { type: "dayPassed" }
   | { type: "dwarfAssigned"; dwarfId: string; assignment: JobType }
-  | { type: "itemCrafted"; recipe: RecipeId }
+  | { type: "craftingStarted"; dwarfId: string; recipe: RecipeId }
   | { type: "toolEquipped"; dwarfId: string }
   | { type: "toolReturned"; dwarfId: string }
   | { type: "expeditionDeparted"; dwarfId: string; destination: string }
@@ -34,8 +34,8 @@ export function colonyReducer(state: ColonyState, action: ColonyAction): ColonyS
       return acknowledgeActivity(state, action.activityId);
     case "dwarfAssigned":
       return assignDwarf(state, action.dwarfId, action.assignment);
-    case "itemCrafted":
-      return craft(state, action.recipe);
+    case "craftingStarted":
+      return startCrafting(state, action.dwarfId, action.recipe);
     case "toolEquipped":
       return equipTool(state, action.dwarfId);
     case "toolReturned":

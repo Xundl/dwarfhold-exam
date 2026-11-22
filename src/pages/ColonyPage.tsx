@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Chronicle } from "../components/Chronicle";
 import { DwarfRoster } from "../components/DwarfRoster";
+import { craftingSummary } from "../forge";
 import {
   activeJob,
   expectedProduction,
@@ -41,6 +42,7 @@ export function ColonyPage() {
     <div className="dashboard">
       <DwarfRoster
         dwarves={colony.dwarves}
+        craftingNote={(dwarf) => craftingSummary(colony, dwarf)}
         freeTools={colony.resources.tools}
         onAssign={assignDwarf}
         onEquipTool={equipTool}
@@ -67,6 +69,10 @@ export function ColonyPage() {
                 (dwarf) => activeJob(dwarf) === job,
               );
               const working = workers.length;
+              const forging = colony.dwarves.filter(
+                (dwarf) =>
+                  dwarf.assignment === job && dwarf.status === "crafting",
+              ).length;
               const fromTools = workers.reduce(
                 (sum, dwarf) => sum + toolBonus(dwarf),
                 0,
@@ -91,6 +97,7 @@ export function ColonyPage() {
                   <p>
                     {working} of {assigned} working
                     {striking > 0 ? ` · ${striking} on strike` : ""}
+                    {forging > 0 ? ` · ${forging} forging` : ""}
                   </p>
                   <strong>
                     +{working * perWorker + fromTools} / day
@@ -124,8 +131,9 @@ export function ColonyPage() {
             )
           )}
           <p className="rule-note">
-            Only dwarves at home with a job produce. A tool gives its carrier
-            +1 per day in any job. Each evening everyone
+            Only dwarves at home with a job produce; a dwarf at the forge
+            produces nothing meanwhile. A tool gives its carrier +1 per day in
+            any job. Each evening everyone
             eats 1 food, travellers included. A dwarf who gets no meal is
             hungry and refuses all work until fed; hungry dwarves are served
             first. If everyone is hungry and the stores are empty, Stonehome
@@ -155,9 +163,11 @@ export function ColonyPage() {
                   {dwarf.name}
                   {dwarf.status === "expedition"
                     ? " (away)"
-                    : dwarf.hungry
-                      ? " (on strike)"
-                      : ""}
+                    : dwarf.status === "crafting"
+                      ? " (forging)"
+                      : dwarf.hungry
+                        ? " (on strike)"
+                        : ""}
                 </option>
               ))}
             </select>

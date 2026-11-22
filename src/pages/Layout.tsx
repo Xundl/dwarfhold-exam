@@ -8,6 +8,9 @@ import { useColony } from "../state/ColonyContext";
 export function Layout() {
   const { colony, paused, togglePaused, restartColony } = useColony();
 
+  const smiths = colony.dwarves.filter(
+    (dwarf) => dwarf.status === "crafting",
+  ).length;
   const starved = hasStarved(colony);
   const waiting = awaitingAcknowledgement(colony);
   const strikers = colony.dwarves
@@ -70,7 +73,12 @@ export function Layout() {
       <Outlet />
 
       <footer>
-        <span>🔥 Forge: burning</span>
+        <span>
+          🔥 Forge:{" "}
+          {smiths === 0
+            ? "the anvil is silent"
+            : `${smiths} at the anvil`}
+        </span>
         <span>
           {starved || waiting || paused
             ? "Day clock stopped"

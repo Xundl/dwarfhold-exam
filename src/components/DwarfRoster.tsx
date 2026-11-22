@@ -10,6 +10,8 @@ const jobs: Exclude<JobType, null>[] = [
 
 interface Props {
   dwarves: Dwarf[];
+  /** Text for a dwarf who works at the forge, e.g. "Forging a weapon · ready on day 14". */
+  craftingNote: (dwarf: Dwarf) => string | null;
   /** Tools lying in the stores, ready to be handed out. */
   freeTools: number;
   onAssign: (id: string, job: JobType) => void;
@@ -19,6 +21,7 @@ interface Props {
 
 export function DwarfRoster({
   dwarves,
+  craftingNote,
   freeTools,
   onAssign,
   onEquipTool,
@@ -46,6 +49,12 @@ export function DwarfRoster({
         {dwarves.map((dwarf) => {
           const isAway = dwarf.status === "expedition";
           const onStrike = dwarf.hungry && isAtHome(dwarf);
+          const forging = craftingNote(dwarf);
+          const statusLabel = onStrike
+            ? "on strike"
+            : dwarf.status === "crafting"
+              ? "forging"
+              : dwarf.status;
           const specialty = dwarf.specialty
             ? `Skilled in ${jobLabel(dwarf.specialty)}`
             : "Generalist";
@@ -77,7 +86,7 @@ export function DwarfRoster({
 
                 <select
                   value={dwarf.assignment ?? ""}
-                  disabled={isAway}
+                  disabled={!isAtHome(dwarf)}
                   onChange={(event) =>
                     onAssign(
                       dwarf.id,
@@ -92,6 +101,8 @@ export function DwarfRoster({
                     </option>
                   ))}
                 </select>
+
+                {forging && <p className="task">🔥 {forging}</p>}
 
                 <div className="gear">
                   {dwarf.hasTool ? (
@@ -119,7 +130,7 @@ export function DwarfRoster({
               </div>
 
               <span className={onStrike ? "status strike" : "status"}>
-                {onStrike ? "on strike" : dwarf.status}
+                {statusLabel}
               </span>
             </article>
           );

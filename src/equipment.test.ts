@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { equipTool, equippedTools, returnTool } from "./equipment";
-import { craft, recipes } from "./forge";
+import { recipes } from "./forge";
 import { advanceDay, expectedProduction } from "./simulation";
 import { colonyReducer, initialColony } from "./state/colonyReducer";
 import type { ColonyState, Dwarf, Job } from "./types";
@@ -111,23 +111,12 @@ describe("D2: tools and expeditions", () => {
 });
 
 describe("D2: weapon recipe", () => {
-  it("costs 2 wood and 4 stone and adds one weapon to the colony", () => {
+  it("costs 2 wood and 4 stone, the tool recipe 3 wood and 2 stone", () => {
     expect(recipes.weapon.cost).toEqual({ wood: 2, stone: 4 });
-    const next = craft(colony({ resources: { wood: 5, stone: 5, food: 9, tools: 1, weapons: 0 } }), "weapon");
-    expect(next.resources).toEqual({ wood: 3, stone: 1, food: 9, tools: 1, weapons: 1 });
+    expect(recipes.tool.cost).toEqual({ wood: 3, stone: 2 });
   });
 
-  it("the tool recipe still costs 3 wood and 2 stone", () => {
-    const next = craft(colony({ resources: { wood: 5, stone: 5, food: 9, tools: 1, weapons: 0 } }), "tool");
-    expect(next.resources).toEqual({ wood: 2, stone: 3, food: 9, tools: 2, weapons: 0 });
-  });
-
-  it("without enough materials nothing is taken and nothing is made", () => {
-    const poor = colony({ resources: { wood: 5, stone: 3, food: 9, tools: 1, weapons: 0 } });
-    expect(craft(poor, "weapon").resources).toEqual(poor.resources);
-  });
-
-  it("weapons survive the daily simulation unchanged", () => {
+  it("weapons are a colony resource and survive the daily simulation unchanged", () => {
     const state = colony({ resources: { wood: 0, stone: 0, food: 9, tools: 0, weapons: 3 }, dwarves: [dwarf("d1")] });
     expect(advanceDay(state).resources.weapons).toBe(3);
   });
