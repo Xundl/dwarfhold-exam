@@ -23,7 +23,7 @@ describe("colony reducer", () => {
 
   it("an invalid forge attempt changes no resources", () => {
     const poor = { ...initialColony, resources: { ...initialColony.resources, stone: 1 } };
-    expect(colonyReducer(poor, { type: "toolCrafted" }).resources).toEqual(poor.resources);
+    expect(colonyReducer(poor, { type: "itemCrafted", recipe: "tool" }).resources).toEqual(poor.resources);
   });
 
   it("chronicle ids are unique and the list stays short", () => {
@@ -74,7 +74,7 @@ describe("D1: a starved colony is lost", () => {
     expect(hasStarved(starved)).toBe(true);
     expect(colonyReducer(starved, { type: "dayPassed" })).toBe(starved);
     expect(colonyReducer(starved, { type: "dwarfAssigned", dwarfId: "dwarf-3", assignment: "farming" })).toBe(starved);
-    expect(colonyReducer(starved, { type: "toolCrafted" })).toBe(starved);
+    expect(colonyReducer(starved, { type: "itemCrafted", recipe: "tool" })).toBe(starved);
   });
 
   it("a restart brings back the initial colony", () => {

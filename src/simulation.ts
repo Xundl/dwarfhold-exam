@@ -1,4 +1,5 @@
 import { logActivity } from "./activityLog";
+import { TOOL_BONUS } from "./equipment";
 import type {
   ColonyState,
   Dwarf,
@@ -33,16 +34,20 @@ export function activeJob(dwarf: Dwarf): Job | null {
   return dwarf.assignment;
 }
 
+/** The extra units a dwarf's tool adds today: only while the dwarf really performs a job (D2). */
+export const toolBonus = (dwarf: Dwarf) =>
+  dwarf.hasTool && activeJob(dwarf) ? TOOL_BONUS : 0;
+
 /** What the colony will produce on the current day. Used by the simulation AND the Shift Ledger. */
 export function expectedProduction(state: ColonyState): Resources {
-  const total: Resources = { wood: 0, stone: 0, food: 0, tools: 0 };
+  const total: Resources = { wood: 0, stone: 0, food: 0, tools: 0, weapons: 0 };
 
   state.dwarves.forEach((dwarf) => {
     const job = activeJob(dwarf);
     if (!job) return;
 
     Object.entries(production[job]).forEach(([resource, amount]) => {
-      total[resource as ResourceKey] += amount ?? 0;
+      total[resource as ResourceKey] += (amount ?? 0) + toolBonus(dwarf);
     });
   });
 
@@ -92,10 +97,10 @@ export function advanceDay(state: ColonyState): ColonyState {
     ...state,
     day: state.day + 1,
     resources: {
+      ...state.resources,
       wood: state.resources.wood + produced.wood,
       stone: state.resources.stone + produced.stone,
       food: meals.food,
-      tools: state.resources.tools + produced.tools,
     },
     dwarves: meals.dwarves,
   };

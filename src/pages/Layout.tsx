@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from "react-router";
 import { awaitingAcknowledgement } from "../activityLog";
 import { ResourceBar } from "../components/ResourceBar";
+import { equippedTools } from "../equipment";
 import { hasStarved } from "../simulation";
 import { useColony } from "../state/ColonyContext";
 
@@ -49,7 +50,10 @@ export function Layout() {
         <NavLink to="/forge">Forge</NavLink>
       </nav>
 
-      <ResourceBar resources={colony.resources} />
+      <ResourceBar
+        resources={colony.resources}
+        equippedTools={equippedTools(colony)}
+      />
       {starved ? null : waiting ? (
         <p className="hunger-alert" role="alert">
           <b>⚠ The day clock is stopped.</b> On strike: {strikers}. Acknowledge

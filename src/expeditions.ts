@@ -1,4 +1,5 @@
 import { logActivity } from "./activityLog";
+import { stowTool } from "./equipment";
 import { homeStatus, isAvailable } from "./simulation";
 import type { ColonyState, DwarfStatus, ExpeditionResult, ResourceKey } from "./types";
 
@@ -23,9 +24,10 @@ export function departOnExpedition(state: ColonyState, dwarfId: string, destinat
   // A dwarf who is away or on strike cannot leave.
   if (!dwarf || !isAvailable(dwarf)) return state;
 
+  // D2/D4: an equipped tool does not travel. It goes back to the stores and can be given to someone else.
   return logActivity(
-    setStatus(state, dwarfId, "expedition"),
-    `${dwarf.name} departed for ${destination.replace("-", " ")}.`,
+    setStatus(stowTool(state, dwarfId), dwarfId, "expedition"),
+    `${dwarf.name} departed for ${destination.replace("-", " ")}.${dwarf.hasTool ? " The tool stays in the stores." : ""}`,
   );
 }
 

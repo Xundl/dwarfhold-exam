@@ -1,24 +1,34 @@
-import type { Resources } from "../types";
+import type { ResourceKey, Resources } from "../types";
 
-const details = {
+const details: Record<ResourceKey, readonly [string, string]> = {
   wood: ["🪵", "Timber"],
   stone: ["🪨", "Stone"],
   food: ["🍄", "Rations"],
-  tools: ["⚒️", "Tools"],
-} as const;
+  tools: ["⚒️", "Free tools"],
+  weapons: ["⚔️", "Weapons"],
+};
 
-export function ResourceBar({ resources }: { resources: Resources }) {
+const order: ResourceKey[] = ["wood", "stone", "food", "tools", "weapons"];
+
+interface Props {
+  resources: Resources;
+  /** Tools carried by dwarves; shown next to the free tools in the stores. */
+  equippedTools: number;
+}
+
+export function ResourceBar({ resources, equippedTools }: Props) {
   return (
     <section className="resource-bar">
-      {Object.entries(resources).map(([key, value]) => {
-        const [icon, label] = details[key as keyof Resources];
+      {order.map((key) => {
+        const [icon, label] = details[key];
 
         return (
           <article key={key}>
             <span>{icon}</span>
             <div>
               <small>{label}</small>
-              <strong>{value}</strong>
+              <strong>{resources[key]}</strong>
+              {key === "tools" && <em>{equippedTools} equipped</em>}
             </div>
           </article>
         );

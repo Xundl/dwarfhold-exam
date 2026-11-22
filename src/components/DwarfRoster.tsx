@@ -1,3 +1,4 @@
+import { canReturnTool } from "../equipment";
 import { isAtHome, jobLabel } from "../simulation";
 import type { Dwarf, JobType } from "../types";
 
@@ -9,10 +10,20 @@ const jobs: Exclude<JobType, null>[] = [
 
 interface Props {
   dwarves: Dwarf[];
+  /** Tools lying in the stores, ready to be handed out. */
+  freeTools: number;
   onAssign: (id: string, job: JobType) => void;
+  onEquipTool: (id: string) => void;
+  onReturnTool: (id: string) => void;
 }
 
-export function DwarfRoster({ dwarves, onAssign }: Props) {
+export function DwarfRoster({
+  dwarves,
+  freeTools,
+  onAssign,
+  onEquipTool,
+  onReturnTool,
+}: Props) {
   const presentDwarves = dwarves.filter(
     (dwarf) => dwarf.status !== "expedition",
   ).length;
@@ -81,6 +92,30 @@ export function DwarfRoster({ dwarves, onAssign }: Props) {
                     </option>
                   ))}
                 </select>
+
+                <div className="gear">
+                  {dwarf.hasTool ? (
+                    <>
+                      <span className="tool-badge">⚒ Tool · +1 / day</span>
+                      <button
+                        disabled={!canReturnTool(dwarf)}
+                        onClick={() => onReturnTool(dwarf.id)}
+                      >
+                        Return tool
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      disabled={isAway || freeTools === 0}
+                      title={
+                        freeTools === 0 ? "No free tool in the stores" : undefined
+                      }
+                      onClick={() => onEquipTool(dwarf.id)}
+                    >
+                      Equip tool
+                    </button>
+                  )}
+                </div>
               </div>
 
               <span className={onStrike ? "status strike" : "status"}>

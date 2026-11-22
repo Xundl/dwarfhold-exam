@@ -8,6 +8,7 @@ import {
   jobLabel,
   mealsNeeded,
   production,
+  toolBonus,
 } from "../simulation";
 import { useColony } from "../state/ColonyContext";
 
@@ -19,6 +20,8 @@ export function ColonyPage() {
     assignDwarf,
     sendExpedition,
     acknowledgeActivity,
+    equipTool,
+    returnTool,
   } = useColony();
   const [destination, setDestination] = useState("crystal-cave");
   const [expeditionDwarf, setExpeditionDwarf] = useState("dwarf-3");
@@ -36,7 +39,13 @@ export function ColonyPage() {
 
   return (
     <div className="dashboard">
-      <DwarfRoster dwarves={colony.dwarves} onAssign={assignDwarf} />
+      <DwarfRoster
+        dwarves={colony.dwarves}
+        freeTools={colony.resources.tools}
+        onAssign={assignDwarf}
+        onEquipTool={equipTool}
+        onReturnTool={returnTool}
+      />
 
       <section className="center-stack">
         <section className="panel production">
@@ -54,9 +63,14 @@ export function ColonyPage() {
               const assigned = colony.dwarves.filter(
                 (dwarf) => dwarf.assignment === job,
               ).length;
-              const working = colony.dwarves.filter(
+              const workers = colony.dwarves.filter(
                 (dwarf) => activeJob(dwarf) === job,
-              ).length;
+              );
+              const working = workers.length;
+              const fromTools = workers.reduce(
+                (sum, dwarf) => sum + toolBonus(dwarf),
+                0,
+              );
               const striking = colony.dwarves.filter(
                 (dwarf) =>
                   dwarf.assignment === job &&
@@ -78,7 +92,10 @@ export function ColonyPage() {
                     {working} of {assigned} working
                     {striking > 0 ? ` · ${striking} on strike` : ""}
                   </p>
-                  <strong>+{working * perWorker} / day</strong>
+                  <strong>
+                    +{working * perWorker + fromTools} / day
+                    {fromTools > 0 ? ` · incl. +${fromTools} from tools` : ""}
+                  </strong>
                 </article>
               );
             })}
@@ -107,7 +124,8 @@ export function ColonyPage() {
             )
           )}
           <p className="rule-note">
-            Only dwarves at home with a job produce. Each evening everyone
+            Only dwarves at home with a job produce. A tool gives its carrier
+            +1 per day in any job. Each evening everyone
             eats 1 food, travellers included. A dwarf who gets no meal is
             hungry and refuses all work until fed; hungry dwarves are served
             first. If everyone is hungry and the stores are empty, Stonehome

@@ -1,26 +1,39 @@
 import { Chronicle } from "../components/Chronicle";
+import { canAfford, recipes, type RecipeId } from "../forge";
 import { useColony } from "../state/ColonyContext";
 
 export function ForgePage() {
-  const { activities, craftTool, acknowledgeActivity } = useColony();
+  const { colony, activities, craftItem, acknowledgeActivity } = useColony();
 
   return (
     <div className="forge-layout">
-      <section className="panel forge">
-        <div>
-          <small>EMBER FORGE</small>
-          <h2>Craft a tool</h2>
-          <p>Equip the hold for future work.</p>
-        </div>
-        <div className="recipe">
-          <span>3 🪵</span>
-          <i>+</i>
-          <span>2 🪨</span>
-          <i>→</i>
-          <span>1 ⚒️</span>
-          <button onClick={craftTool}>Forge tool</button>
-        </div>
-      </section>
+      <div className="forge-recipes">
+        {(Object.keys(recipes) as RecipeId[]).map((id) => {
+          const recipe = recipes[id];
+          const affordable = canAfford(colony, id);
+
+          return (
+            <section className="panel forge" key={id}>
+              <div>
+                <small>EMBER FORGE</small>
+                <h2>Craft a {recipe.label.toLowerCase()}</h2>
+                <p>{recipe.purpose}</p>
+              </div>
+              <div className="recipe">
+                <span>{recipe.cost.wood} 🪵</span>
+                <i>+</i>
+                <span>{recipe.cost.stone} 🪨</span>
+                <i>→</i>
+                <span>1 {recipe.icon}</span>
+                <button disabled={!affordable} onClick={() => craftItem(id)}>
+                  Forge {recipe.label.toLowerCase()}
+                </button>
+                {!affordable && <em>Not enough materials</em>}
+              </div>
+            </section>
+          );
+        })}
+      </div>
 
       <Chronicle
         activities={activities}
