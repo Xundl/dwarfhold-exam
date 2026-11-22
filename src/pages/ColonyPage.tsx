@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Chronicle } from "../components/Chronicle";
 import { DwarfRoster } from "../components/DwarfRoster";
+import { craftingSummary } from "../forge";
 import {
   activeJob,
   expectedProduction,
@@ -8,6 +9,7 @@ import {
   jobLabel,
   mealsNeeded,
   production,
+  toolBonus,
 } from "../simulation";
 import { useColony } from "../state/ColonyContext";
 
@@ -15,10 +17,12 @@ export function ColonyPage() {
   const {
     colony,
     activities,
-    expeditionPending,
+    //expeditionPending,
     assignDwarf,
     sendExpedition,
     acknowledgeActivity,
+    equipTool,
+    returnTool,
   } = useColony();
   const [destination, setDestination] = useState("crystal-cave");
   const [expeditionDwarf, setExpeditionDwarf] = useState("dwarf-3");
@@ -33,10 +37,18 @@ export function ColonyPage() {
 
   const scout = colony.dwarves.find((dwarf) => dwarf.id === expeditionDwarf);
   const scoutAvailable = scout !== undefined && isAvailable(scout);
+  const scoutAway = scout?.status === "expedition";
 
   return (
     <div className="dashboard">
-      <DwarfRoster dwarves={colony.dwarves} onAssign={assignDwarf} />
+      <DwarfRoster
+        dwarves={colony.dwarves}
+        craftingNote={(dwarf) => craftingSummary(colony, dwarf)}
+        freeTools={colony.resources.tools}
+        onAssign={assignDwarf}
+        onEquipTool={equipTool}
+        onReturnTool={returnTool}
+      />
 
       <section className="center-stack">
         <section className="panel production">
@@ -54,9 +66,18 @@ export function ColonyPage() {
               const assigned = colony.dwarves.filter(
                 (dwarf) => dwarf.assignment === job,
               ).length;
-              const working = colony.dwarves.filter(
+              const workers = colony.dwarves.filter(
                 (dwarf) => activeJob(dwarf) === job,
+              );
+              const working = workers.length;
+              const forging = colony.dwarves.filter(
+                (dwarf) =>
+                  dwarf.assignment === job && dwarf.status === "crafting",
               ).length;
+              const fromTools = workers.reduce(
+                (sum, dwarf) => sum + toolBonus(dwarf),
+                0,
+              );
               const striking = colony.dwarves.filter(
                 (dwarf) =>
                   dwarf.assignment === job &&
@@ -77,8 +98,12 @@ export function ColonyPage() {
                   <p>
                     {working} of {assigned} working
                     {striking > 0 ? ` · ${striking} on strike` : ""}
+                    {forging > 0 ? ` · ${forging} forging` : ""}
                   </p>
-                  <strong>+{working * perWorker} / day</strong>
+                  <strong>
+                    +{working * perWorker + fromTools} / day
+                    {fromTools > 0 ? ` · incl. +${fromTools} from tools` : ""}
+                  </strong>
                 </article>
               );
             })}
@@ -107,7 +132,9 @@ export function ColonyPage() {
             )
           )}
           <p className="rule-note">
-            Only dwarves at home with a job produce. Each evening everyone
+            Only dwarves at home with a job produce; a dwarf at the forge
+            produces nothing meanwhile. A tool gives its carrier +1 per day in
+            any job. Each evening everyone
             eats 1 food, travellers included. A dwarf who gets no meal is
             hungry and refuses all work until fed; hungry dwarves are served
             first. If everyone is hungry and the stores are empty, Stonehome
@@ -137,9 +164,11 @@ export function ColonyPage() {
                   {dwarf.name}
                   {dwarf.status === "expedition"
                     ? " (away)"
-                    : dwarf.hungry
-                      ? " (on strike)"
-                      : ""}
+                    : dwarf.status === "crafting"
+                      ? " (forging)"
+                      : dwarf.hungry
+                        ? " (on strike)"
+                        : ""}
                 </option>
               ))}
             </select>
@@ -158,14 +187,15 @@ export function ColonyPage() {
           </label>
 
           <button
-            disabled={expeditionPending || !scoutAvailable}
+            disabled={!scoutAvailable}
             onClick={() => sendExpedition(expeditionDwarf, destination)}
           >
-            {expeditionPending ? "Beyond the gate…" : "Send expedition"}
+            {scoutAway ? "Beyond the gate…" : "Send expedition"}
           </button>
           <p>
-            A result returns in one request. The selected dwarf is unavailable
-            while travelling.
+            The selected dwarf is unavailable while travelling. Several dwarves
+            may travel at once, but each only once. With no answer after 10
+            seconds the expedition fails: no rewards, and the dwarf returns home.
           </p>
         </section>
 

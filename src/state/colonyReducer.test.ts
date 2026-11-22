@@ -12,18 +12,18 @@ const withFood = (amount: number): ColonyState => ({
 describe("colony reducer", () => {
   it("a dwarf sent on an expedition stops producing until back home", () => {
     // Bromli (dwarf-1) mines 2 stone per day in the initial colony.
-    const away = colonyReducer(initialColony, { type: "expeditionDeparted", dwarfId: "dwarf-1", destination: "old-mine" });
+    const away = colonyReducer(initialColony, { type: "expeditionDeparted", expeditionId: "e1", dwarfId: "dwarf-1", destination: "old-mine" });
     expect(colonyReducer(away, { type: "dayPassed" }).resources.stone).toBe(initialColony.resources.stone);
 
-    const back = colonyReducer(away, { type: "expeditionFailed", dwarfId: "dwarf-1", reason: "Rockfall." });
+    const back = colonyReducer(away, { type: "expeditionFailed", expeditionId: "e1", reason: "Rockfall." });
     expect(back.dwarves[0].status).toBe("working");
     expect(back.resources).toEqual(initialColony.resources);
     expect(colonyReducer(back, { type: "dayPassed" }).resources.stone).toBe(initialColony.resources.stone + 2);
   });
 
-  it("an invalid forge attempt changes no resources", () => {
+  it("an invalid forge attempt changes nothing", () => {
     const poor = { ...initialColony, resources: { ...initialColony.resources, stone: 1 } };
-    expect(colonyReducer(poor, { type: "toolCrafted" }).resources).toEqual(poor.resources);
+    expect(colonyReducer(poor, { type: "craftingStarted", dwarfId: "dwarf-3", recipe: "tool" })).toBe(poor);
   });
 
   it("chronicle ids are unique and the list stays short", () => {
@@ -63,7 +63,7 @@ describe("D1: strike reports stop the day clock", () => {
   });
 
   it("a dwarf on strike cannot leave on an expedition", () => {
-    expect(colonyReducer(striking, { type: "expeditionDeparted", dwarfId: "dwarf-3", destination: "old-mine" })).toBe(striking);
+    expect(colonyReducer(striking, { type: "expeditionDeparted", expeditionId: "e1", dwarfId: "dwarf-3", destination: "old-mine" })).toBe(striking);
   });
 });
 
@@ -74,7 +74,7 @@ describe("D1: a starved colony is lost", () => {
     expect(hasStarved(starved)).toBe(true);
     expect(colonyReducer(starved, { type: "dayPassed" })).toBe(starved);
     expect(colonyReducer(starved, { type: "dwarfAssigned", dwarfId: "dwarf-3", assignment: "farming" })).toBe(starved);
-    expect(colonyReducer(starved, { type: "toolCrafted" })).toBe(starved);
+    expect(colonyReducer(starved, { type: "craftingStarted", dwarfId: "dwarf-3", recipe: "tool" })).toBe(starved);
   });
 
   it("a restart brings back the initial colony", () => {

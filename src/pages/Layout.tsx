@@ -1,12 +1,16 @@
 import { NavLink, Outlet } from "react-router";
 import { awaitingAcknowledgement } from "../activityLog";
 import { ResourceBar } from "../components/ResourceBar";
+import { equippedTools } from "../equipment";
 import { hasStarved } from "../simulation";
 import { useColony } from "../state/ColonyContext";
 
 export function Layout() {
   const { colony, paused, togglePaused, restartColony } = useColony();
 
+  const smiths = colony.dwarves.filter(
+    (dwarf) => dwarf.status === "crafting",
+  ).length;
   const starved = hasStarved(colony);
   const waiting = awaitingAcknowledgement(colony);
   const strikers = colony.dwarves
@@ -49,7 +53,10 @@ export function Layout() {
         <NavLink to="/forge">Forge</NavLink>
       </nav>
 
-      <ResourceBar resources={colony.resources} />
+      <ResourceBar
+        resources={colony.resources}
+        equippedTools={equippedTools(colony)}
+      />
       {starved ? null : waiting ? (
         <p className="hunger-alert" role="alert">
           <b>⚠ The day clock is stopped.</b> On strike: {strikers}. Acknowledge
@@ -66,7 +73,12 @@ export function Layout() {
       <Outlet />
 
       <footer>
-        <span>🔥 Forge: burning</span>
+        <span>
+          🔥 Forge:{" "}
+          {smiths === 0
+            ? "the anvil is silent"
+            : `${smiths} at the anvil`}
+        </span>
         <span>
           {starved || waiting || paused
             ? "Day clock stopped"

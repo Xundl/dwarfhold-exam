@@ -8,7 +8,7 @@ import { colonyReducer, initialColony } from "./colonyReducer";
 export function ColonyProvider({ children }: { children: ReactNode }) {
   const [colony, dispatch] = useReducer(colonyReducer, initialColony);
   const [paused, setPaused] = useState(false);
-  const [expeditionPending, setExpeditionPending] = useState(false);
+  //const [expeditionPending, setExpeditionPending] = useState(false);
 
   // The day clock stops for a manual pause, an unacknowledged strike report, or a starved colony.
   const clockStopped =
@@ -25,27 +25,27 @@ export function ColonyProvider({ children }: { children: ReactNode }) {
     return () => window.clearInterval(timer);
   }, [clockStopped]);
 
-  async function sendExpedition(dwarfId: string, destination: string) {
+    async function sendExpedition(dwarfId: string, destination: string) {
     const dwarf = colony.dwarves.find((item) => item.id === dwarfId);
     if (!dwarf || !isAvailable(dwarf) || hasStarved(colony)) return;
 
-    setExpeditionPending(true);
-    dispatch({ type: "expeditionDeparted", dwarfId, destination });
+    // The id is created here so the answer can later be matched to exactly this expedition.
+    const expeditionId = crypto.randomUUID();
+
+    dispatch({ type: "expeditionDeparted", expeditionId, dwarfId, destination });
 
     try {
       const result = await beginExpedition(dwarfId, destination);
-      dispatch({ type: "expeditionSucceeded", dwarfId, result });
+      dispatch({ type: "expeditionSucceeded", expeditionId, result });
     } catch (error) {
       dispatch({
         type: "expeditionFailed",
-        dwarfId,
+        expeditionId,
         reason:
           error instanceof Error
             ? error.message
             : "The expedition was lost from view.",
       });
-    } finally {
-      setExpeditionPending(false);
     }
   }
 
@@ -53,11 +53,14 @@ export function ColonyProvider({ children }: { children: ReactNode }) {
     colony,
     paused,
     activities: colony.activities,
-    expeditionPending,
+    //expeditionPending,
     togglePaused: () => setPaused((value) => !value),
     assignDwarf: (dwarfId, assignment) =>
       dispatch({ type: "dwarfAssigned", dwarfId, assignment }),
-    craftTool: () => dispatch({ type: "toolCrafted" }),
+    startCrafting: (dwarfId, recipe) =>
+      dispatch({ type: "craftingStarted", dwarfId, recipe }),
+    equipTool: (dwarfId) => dispatch({ type: "toolEquipped", dwarfId }),
+    returnTool: (dwarfId) => dispatch({ type: "toolReturned", dwarfId }),
     sendExpedition,
     acknowledgeActivity: (activityId) =>
       dispatch({ type: "activityAcknowledged", activityId }),
