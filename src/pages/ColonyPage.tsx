@@ -1,9 +1,15 @@
 import { useState } from "react";
 import { Chronicle } from "../components/Chronicle";
 import { DwarfRoster } from "../components/DwarfRoster";
-import { jobLabel, production } from "../simulation";
+import {
+  activeJob,
+  expectedProduction,
+  isAvailable,
+  jobLabel,
+  mealsNeeded,
+  production,
+} from "../simulation";
 import { useColony } from "../state/ColonyContext";
-import type { ResourceKey } from "../types";
 
 export function ColonyPage() {
   const {
@@ -12,27 +18,21 @@ export function ColonyPage() {
     expeditionPending,
     assignDwarf,
     sendExpedition,
+    acknowledgeActivity,
   } = useColony();
   const [destination, setDestination] = useState("crystal-cave");
   const [expeditionDwarf, setExpeditionDwarf] = useState("dwarf-3");
 
-  const dailyOutput = colony.dwarves.reduce<Record<ResourceKey, number>>(
-    (total, dwarf) => {
-      if (dwarf.assignment) {
-        const output = production[dwarf.assignment];
-        Object.entries(output).forEach(([resource, amount]) => {
-          total[resource as ResourceKey] += amount ?? 0;
-        });
-      }
-      return total;
-    },
-    {
-      wood: 0,
-      stone: 0,
-      food: -colony.dwarves.length,
-      tools: 0,
-    },
-  );
+  // Same functions as the simulation itself, so the ledger can never disagree with it.
+  const meals = mealsNeeded(colony);
+  const netFood = expectedProduction(colony).food - meals;
+  const shortageTonight = colony.resources.food + netFood < 0;
+  // Evenings on which everyone can still be fed if nothing changes.
+  const eveningsCovered =
+    netFood < 0 ? Math.floor(colony.resources.food / -netFood) : null;
+
+  const scout = colony.dwarves.find((dwarf) => dwarf.id === expeditionDwarf);
+  const scoutAvailable = scout !== undefined && isAvailable(scout);
 
   return (
     <div className="dashboard">
@@ -49,36 +49,70 @@ export function ColonyPage() {
           </header>
 
           <div className="job-grid">
-            {(["woodcutting", "mining", "farming"] as const).map((job) => (
-              <article key={job}>
-                <b>
-                  {job === "woodcutting"
-                    ? "🌲"
-                    : job === "mining"
-                      ? "⛏️"
-                      : "🍄"}
-                </b>
-                <h3>{jobLabel(job)}</h3>
-                <p>
-                  {
-                    colony.dwarves.filter(
-                      (dwarf) => dwarf.assignment === job,
-                    ).length
-                  }{" "}
-                  assigned
-                </p>
-                <strong>+{Object.values(production[job])[0]} / day</strong>
-              </article>
-            ))}
+            {(["woodcutting", "mining", "farming"] as const).map((job) => {
+              const perWorker = Object.values(production[job])[0] ?? 0;
+              const assigned = colony.dwarves.filter(
+                (dwarf) => dwarf.assignment === job,
+              ).length;
+              const working = colony.dwarves.filter(
+                (dwarf) => activeJob(dwarf) === job,
+              ).length;
+              const striking = colony.dwarves.filter(
+                (dwarf) =>
+                  dwarf.assignment === job &&
+                  dwarf.status === "working" &&
+                  dwarf.hungry,
+              ).length;
+
+              return (
+                <article key={job}>
+                  <b>
+                    {job === "woodcutting"
+                      ? "🌲"
+                      : job === "mining"
+                        ? "⛏️"
+                        : "🍄"}
+                  </b>
+                  <h3>{jobLabel(job)}</h3>
+                  <p>
+                    {working} of {assigned} working
+                    {striking > 0 ? ` · ${striking} on strike` : ""}
+                  </p>
+                  <strong>+{working * perWorker} / day</strong>
+                </article>
+              );
+            })}
           </div>
 
           <div className="net-line">
-            <span>NET FOOD AFTER MEALS</span>
-            <strong className={dailyOutput.food >= 0 ? "gain" : "loss"}>
-              {dailyOutput.food >= 0 ? "+" : ""}
-              {dailyOutput.food}
+            <span>NET FOOD AFTER MEALS ({meals} EATEN PER DAY)</span>
+            <strong className={netFood >= 0 ? "gain" : "loss"}>
+              {netFood >= 0 ? "+" : ""}
+              {netFood}
             </strong>
           </div>
+
+          {shortageTonight ? (
+            <p className="rule-note warning">
+              The stores will not cover tonight's meals: someone will go hungry
+              and strike. Assign more farmers before the day ends.
+            </p>
+          ) : (
+            eveningsCovered !== null &&
+            eveningsCovered <= 3 && (
+              <p className="rule-note warning">
+                At this rate the stores cover only {eveningsCovered} more{" "}
+                {eveningsCovered === 1 ? "evening" : "evenings"}.
+              </p>
+            )
+          )}
+          <p className="rule-note">
+            Only dwarves at home with a job produce. Each evening everyone
+            eats 1 food, travellers included. A dwarf who gets no meal is
+            hungry and refuses all work until fed; hungry dwarves are served
+            first. If everyone is hungry and the stores are empty, Stonehome
+            has starved.
+          </p>
         </section>
       </section>
 
@@ -101,6 +135,11 @@ export function ColonyPage() {
               {colony.dwarves.map((dwarf) => (
                 <option key={dwarf.id} value={dwarf.id}>
                   {dwarf.name}
+                  {dwarf.status === "expedition"
+                    ? " (away)"
+                    : dwarf.hungry
+                      ? " (on strike)"
+                      : ""}
                 </option>
               ))}
             </select>
@@ -119,7 +158,7 @@ export function ColonyPage() {
           </label>
 
           <button
-            disabled={expeditionPending}
+            disabled={expeditionPending || !scoutAvailable}
             onClick={() => sendExpedition(expeditionDwarf, destination)}
           >
             {expeditionPending ? "Beyond the gate…" : "Send expedition"}
@@ -130,7 +169,10 @@ export function ColonyPage() {
           </p>
         </section>
 
-        <Chronicle activities={activities} />
+        <Chronicle
+          activities={activities}
+          onAcknowledge={acknowledgeActivity}
+        />
       </aside>
     </div>
   );

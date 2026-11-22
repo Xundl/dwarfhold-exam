@@ -1,4 +1,4 @@
-import { jobLabel } from "../simulation";
+import { isAtHome, jobLabel } from "../simulation";
 import type { Dwarf, JobType } from "../types";
 
 const jobs: Exclude<JobType, null>[] = [
@@ -16,6 +16,7 @@ export function DwarfRoster({ dwarves, onAssign }: Props) {
   const presentDwarves = dwarves.filter(
     (dwarf) => dwarf.status !== "expedition",
   ).length;
+  const strikers = dwarves.filter((dwarf) => dwarf.hungry).length;
 
   return (
     <section className="panel roster">
@@ -26,12 +27,14 @@ export function DwarfRoster({ dwarves, onAssign }: Props) {
         </div>
         <span>
           {presentDwarves} / {dwarves.length} present
+          {strikers > 0 ? ` · ${strikers} on strike` : ""}
         </span>
       </header>
 
       <div className="dwarf-list">
         {dwarves.map((dwarf) => {
           const isAway = dwarf.status === "expedition";
+          const onStrike = dwarf.hungry && isAtHome(dwarf);
           const specialty = dwarf.specialty
             ? `Skilled in ${jobLabel(dwarf.specialty)}`
             : "Generalist";
@@ -43,7 +46,7 @@ export function DwarfRoster({ dwarves, onAssign }: Props) {
             >
               <div className="portrait">
                 {dwarf.icon}
-                <i className={dwarf.status} />
+                <i className={onStrike ? "strike" : dwarf.status} />
               </div>
 
               <div className="dwarf-details">
@@ -51,6 +54,15 @@ export function DwarfRoster({ dwarves, onAssign }: Props) {
                 <p>
                   {dwarf.title} · {specialty}
                 </p>
+
+                <div
+                  className={dwarf.hungry ? "hunger empty" : "hunger"}
+                  role="img"
+                  aria-label={dwarf.hungry ? "Hunger bar empty" : "Hunger bar full"}
+                >
+                  <i />
+                  {dwarf.hungry ? "Hungry" : "Fed"}
+                </div>
 
                 <select
                   value={dwarf.assignment ?? ""}
@@ -71,7 +83,9 @@ export function DwarfRoster({ dwarves, onAssign }: Props) {
                 </select>
               </div>
 
-              <span className="status">{dwarf.status}</span>
+              <span className={onStrike ? "status strike" : "status"}>
+                {onStrike ? "on strike" : dwarf.status}
+              </span>
             </article>
           );
         })}
