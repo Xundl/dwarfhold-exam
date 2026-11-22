@@ -2,7 +2,7 @@ import { Chronicle } from "../components/Chronicle";
 import { useColony } from "../state/ColonyContext";
 
 export function ForgePage() {
-  const { activities, craftTool } = useColony();
+  const { activities, craftTool, acknowledgeActivity } = useColony();
 
   return (
     <div className="forge-layout">
@@ -22,7 +22,10 @@ export function ForgePage() {
         </div>
       </section>
 
-      <Chronicle activities={activities} />
+      <Chronicle
+        activities={activities}
+        onAcknowledge={acknowledgeActivity}
+      />
     </div>
   );
 }
