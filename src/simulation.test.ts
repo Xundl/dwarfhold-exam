@@ -10,12 +10,12 @@ import {
 import type { ColonyState, Dwarf } from "./types";
 
 const dwarf = (id: string, overrides: Partial<Dwarf> = {}): Dwarf => ({
-  id, name: id, title: "", icon: "", assignment: null, status: "idle", hungry: false, ...overrides,
+  id, name: id, title: "", icon: "", assignment: null, status: "idle", hungry: false, hasTool: false, ...overrides,
 });
 
 const colony = (overrides: Partial<ColonyState> = {}): ColonyState => ({
   day: 1,
-  resources: { wood: 0, stone: 0, food: 5, tools: 0 },
+  resources: { wood: 0, stone: 0, food: 5, tools: 0, weapons: 0 },
   dwarves: [],
   activities: [],
   activityCount: 0,
@@ -23,7 +23,7 @@ const colony = (overrides: Partial<ColonyState> = {}): ColonyState => ({
   ...overrides,
 });
 
-const food = (amount: number) => ({ wood: 0, stone: 0, food: amount, tools: 0 });
+const food = (amount: number) => ({ wood: 0, stone: 0, food: amount, tools: 0, weapons: 0 });
 const hungryIds = (state: ColonyState) =>
   state.dwarves.filter((item) => item.hungry).map((item) => item.id);
 
@@ -48,7 +48,7 @@ describe("D1: one activity at a time", () => {
 
   it("an unassigned dwarf does not produce", () => {
     const state = colony({ dwarves: [dwarf("d1")] });
-    expect(expectedProduction(state)).toEqual({ wood: 0, stone: 0, food: 0, tools: 0 });
+    expect(expectedProduction(state)).toEqual({ wood: 0, stone: 0, food: 0, tools: 0, weapons: 0 });
   });
 
   it("does not reassign a dwarf who is away", () => {

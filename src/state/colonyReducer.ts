@@ -1,13 +1,16 @@
 import { acknowledgeActivity, awaitingAcknowledgement } from "../activityLog";
 import { completeExpedition, departOnExpedition, failExpedition } from "../expeditions";
-import { craftTool } from "../forge";
+import { equipTool, returnTool } from "../equipment";
+import { startCrafting, type RecipeId } from "../forge";
 import { advanceDay, assignDwarf, hasStarved } from "../simulation";
 import type { ColonyState, ExpeditionResult, JobType } from "../types";
 
 export type ColonyAction =
   | { type: "dayPassed" }
   | { type: "dwarfAssigned"; dwarfId: string; assignment: JobType }
-  | { type: "toolCrafted" }
+  | { type: "craftingStarted"; dwarfId: string; recipe: RecipeId }
+  | { type: "toolEquipped"; dwarfId: string }
+  | { type: "toolReturned"; dwarfId: string }
   | { type: "expeditionDeparted"; expeditionId: string; dwarfId: string; destination: string }
   | { type: "expeditionSucceeded"; expeditionId: string; result: ExpeditionResult }
   | { type: "expeditionFailed"; expeditionId: string; reason: string }
@@ -31,9 +34,13 @@ export function colonyReducer(state: ColonyState, action: ColonyAction): ColonyS
       return acknowledgeActivity(state, action.activityId);
     case "dwarfAssigned":
       return assignDwarf(state, action.dwarfId, action.assignment);
-    case "toolCrafted":
-      return craftTool(state);
-        case "expeditionDeparted":
+    case "craftingStarted":
+      return startCrafting(state, action.dwarfId, action.recipe);
+    case "toolEquipped":
+      return equipTool(state, action.dwarfId);
+    case "toolReturned":
+      return returnTool(state, action.dwarfId);
+    case "expeditionDeparted":
       return departOnExpedition(state, action.expeditionId, action.dwarfId, action.destination);
     case "expeditionSucceeded":
       return completeExpedition(state, action.expeditionId, action.result);
@@ -49,6 +56,7 @@ export const initialColony: ColonyState = {
     stone: 9,
     food: 18,
     tools: 1,
+    weapons: 0,
   },
   dwarves: [
     {
@@ -59,6 +67,7 @@ export const initialColony: ColonyState = {
       assignment: "mining",
       status: "working",
       hungry: false,
+      hasTool: false,
       specialty: "mining",
     },
     {
@@ -69,6 +78,7 @@ export const initialColony: ColonyState = {
       assignment: "woodcutting",
       status: "working",
       hungry: false,
+      hasTool: false,
       specialty: "woodcutting",
     },
     {
@@ -79,6 +89,7 @@ export const initialColony: ColonyState = {
       assignment: null,
       status: "idle",
       hungry: false,
+      hasTool: false,
     },
   ],
   activities: [

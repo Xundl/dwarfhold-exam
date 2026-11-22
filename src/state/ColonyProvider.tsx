@@ -57,7 +57,10 @@ export function ColonyProvider({ children }: { children: ReactNode }) {
     togglePaused: () => setPaused((value) => !value),
     assignDwarf: (dwarfId, assignment) =>
       dispatch({ type: "dwarfAssigned", dwarfId, assignment }),
-    craftTool: () => dispatch({ type: "toolCrafted" }),
+    startCrafting: (dwarfId, recipe) =>
+      dispatch({ type: "craftingStarted", dwarfId, recipe }),
+    equipTool: (dwarfId) => dispatch({ type: "toolEquipped", dwarfId }),
+    returnTool: (dwarfId) => dispatch({ type: "toolReturned", dwarfId }),
     sendExpedition,
     acknowledgeActivity: (activityId) =>
       dispatch({ type: "activityAcknowledged", activityId }),

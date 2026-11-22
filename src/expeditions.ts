@@ -1,4 +1,5 @@
 import { logActivity } from "./activityLog";
+import { stowTool } from "./equipment";
 import { homeStatus, isAvailable } from "./simulation";
 import type { ColonyState, ExpeditionResult, ResourceKey } from "./types";
 
@@ -35,18 +36,24 @@ export function departOnExpedition(
   // Away, on strike or unknown: the dwarf cannot leave. Nothing changes.
   if (!dwarf || !isAvailable(dwarf)) return state;
 
+  // D2/D4: an equipped tool does not travel. It goes back to the stores and can be given to someone else.
+  const stowed = stowTool(state, dwarfId);
+
   const next: ColonyState = {
-    ...state,
+    ...stowed,
     expeditions: [
-      ...state.expeditions,
-      { id: expeditionId, dwarfId, destination, departedDay: state.day },
+      ...stowed.expeditions,
+      { id: expeditionId, dwarfId, destination, departedDay: stowed.day },
     ],
-    dwarves: state.dwarves.map((item) =>
+    dwarves: stowed.dwarves.map((item) =>
       item.id === dwarfId ? { ...item, status: "expedition" } : item,
     ),
   };
 
-  return logActivity(next, `${dwarf.name} departed for ${destination.replace("-", " ")}.`);
+  return logActivity(
+    next,
+    `${dwarf.name} departed for ${destination.replace("-", " ")}.${dwarf.hasTool ? " The tool stays in the stores." : ""}`,
+  );
 }
 
 export function completeExpedition(
