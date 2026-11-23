@@ -1,4 +1,5 @@
 import { logActivity } from "./activityLog";
+import { raidAfterExpedition } from "./raid";
 import { stowTool } from "./equipment";
 import { homeStatus, isAvailable } from "./simulation";
 import { welcomeNewcomer } from "./species";
@@ -73,7 +74,12 @@ export function completeExpedition(
   const rewarded = logActivity({ ...ended.next, resources }, result.message, "good");
 
   // D6: the first success at the right destination brings the elf to Stonehome.
-  return welcomeNewcomer(rewarded, ended.expedition.destination);
+  const settled = welcomeNewcomer(rewarded, ended.expedition.destination);
+
+  // D7: a success at the goblin warren is followed by an attack, decided right now.
+  // A failed expedition never reaches this function, so it can never cause one.
+  const scout = settled.dwarves.find((dwarf) => dwarf.id === ended.expedition.dwarfId);
+  return raidAfterExpedition(settled, ended.expedition.destination, scout?.name ?? "the scout");
 }
 
 /** A failed expedition gives no reward and brings the dwarf back home. */

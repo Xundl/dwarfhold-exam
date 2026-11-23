@@ -8,6 +8,8 @@ let expeditionNumber = 16;
 const outcomes = {
   "crystal-cave": { rewards: { stone: 8, tools: 1 }, message: "The scout found a crystal seam and an abandoned mason's tool." },
   "old-mine": { rewards: { stone: 12, wood: 2 }, message: "The old mine still holds good stone and usable supports." },
+  // D7: a success here makes goblins follow the scout home. The client decides the attack.
+  "goblin-warren": { rewards: { wood: 10, food: 6 }, message: "The scout slipped out of the goblin warren with timber and stolen rations. Something is following." },
 };
 
 app.use(cors()); app.use(express.json());

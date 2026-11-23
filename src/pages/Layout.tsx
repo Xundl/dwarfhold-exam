@@ -2,16 +2,19 @@ import { NavLink, Outlet } from "react-router";
 import { awaitingAcknowledgement } from "../activityLog";
 import { ResourceBar } from "../components/ResourceBar";
 import { equippedTools } from "../equipment";
+import { openRaid, WEAPONS_TO_DEFEND } from "../raid";
 import { hasStarved } from "../simulation";
 import { useColony } from "../state/ColonyContext";
 
 export function Layout() {
-  const { colony, paused, togglePaused, restartColony } = useColony();
+  const { colony, paused, togglePaused, restartColony, dismissRaid } =
+    useColony();
 
   const smiths = colony.dwarves.filter(
     (dwarf) => dwarf.status === "crafting",
   ).length;
   const starved = hasStarved(colony);
+  const raid = openRaid(colony);
   const waiting = awaitingAcknowledgement(colony);
   const strikers = colony.dwarves
     .filter((dwarf) => dwarf.hungry)
@@ -80,15 +83,17 @@ export function Layout() {
             : `${smiths} at the anvil`}
         </span>
         <span>
-          {starved || waiting || paused
+          {starved || waiting || paused || raid
             ? "Day clock stopped"
             : "Next deep day in ~8 seconds"}
         </span>
         <span>
           {starved
             ? "The colony is lost"
-            : waiting
-              ? "Waiting for your acknowledgement"
+            : raid
+              ? "A raid report is open"
+              : waiting
+                ? "Waiting for your acknowledgement"
               : paused
                 ? "The hold is resting"
                 : "⚙ Simulation active"}
@@ -111,6 +116,49 @@ export function Layout() {
           </p>
           <button autoFocus onClick={restartColony}>
             Start a new colony
+          </button>
+        </div>
+      )}
+
+      {raid && !starved && (
+        <div
+          className={raid.defended ? "game-over raid won" : "game-over raid"}
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby="raid-title"
+        >
+          <small>GOBLINS FOLLOWED {raid.scout.toUpperCase()} HOME</small>
+          <h2 id="raid-title">{raid.defended ? "Defended!" : "Raid!"}</h2>
+          {raid.defended ? (
+            <>
+              <strong>Stonehome held the gate</strong>
+              <p>
+                The armoury held {raid.weaponsBefore} weapons, and{" "}
+                {WEAPONS_TO_DEFEND} are needed to defend. Nothing was stolen.{" "}
+                {raid.weaponsLost} weapon broke in the fight; weapons left:{" "}
+                {raid.weaponsBefore - raid.weaponsLost}.
+              </p>
+            </>
+          ) : (
+            <>
+              <strong>Stonehome was looted</strong>
+              <p>
+                The armoury held {raid.weaponsBefore} of the{" "}
+                {WEAPONS_TO_DEFEND} weapons needed to defend. The goblins
+                carried off half of the stores:
+              </p>
+              <ul>
+                <li>🪵 −{raid.loot.wood} timber</li>
+                <li>🪨 −{raid.loot.stone} stone</li>
+                <li>🍄 −{raid.loot.food} rations</li>
+              </ul>
+            </>
+          )}
+          {colony.raids.length > 1 && (
+            <small>{colony.raids.length - 1} more report follows</small>
+          )}
+          <button autoFocus onClick={dismissRaid}>
+            Continue
           </button>
         </div>
       )}

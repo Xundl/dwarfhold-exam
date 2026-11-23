@@ -2,6 +2,7 @@ import { acknowledgeActivity, awaitingAcknowledgement } from "../activityLog";
 import { completeExpedition, departOnExpedition, failExpedition } from "../expeditions";
 import { equipTool, returnTool } from "../equipment";
 import { startCrafting, type RecipeId } from "../forge";
+import { dismissRaid, openRaid } from "../raid";
 import { advanceDay, assignDwarf, hasStarved } from "../simulation";
 import type { ColonyState, ExpeditionResult, JobType } from "../types";
 
@@ -15,6 +16,7 @@ export type ColonyAction =
   | { type: "expeditionSucceeded"; expeditionId: string; result: ExpeditionResult }
   | { type: "expeditionFailed"; expeditionId: string; reason: string }
   | { type: "activityAcknowledged"; activityId: string }
+  | { type: "raidAcknowledged" }
   | { type: "colonyRestarted" };
 
 /**
@@ -28,8 +30,10 @@ export function colonyReducer(state: ColonyState, action: ColonyAction): ColonyS
 
   switch (action.type) {
     case "dayPassed":
-      // The day clock stands still while a strike report is unacknowledged.
-      return awaitingAcknowledgement(state) ? state : advanceDay(state);
+      // The day clock stands still while a strike report or a raid report is unread.
+      return awaitingAcknowledgement(state) || openRaid(state) ? state : advanceDay(state);
+    case "raidAcknowledged":
+      return dismissRaid(state);
     case "activityAcknowledged":
       return acknowledgeActivity(state, action.activityId);
     case "dwarfAssigned":
@@ -104,4 +108,5 @@ export const initialColony: ColonyState = {
   ],
   activityCount: 0,
   expeditions: [],
+  raids: [],
 };
