@@ -1,13 +1,14 @@
 import { useEffect, useReducer, useState, type ReactNode } from "react";
 import { awaitingAcknowledgement } from "../activityLog";
 import { beginExpedition } from "../api";
+import { saveColony, startingColony } from "../persistence";
 import { openRaid } from "../raid";
 import { hasStarved, isAvailable } from "../simulation";
 import { ColonyContext, type ColonyContextValue } from "./ColonyContext";
-import { colonyReducer, initialColony } from "./colonyReducer";
+import { colonyReducer } from "./colonyReducer";
 
 export function ColonyProvider({ children }: { children: ReactNode }) {
-  const [colony, dispatch] = useReducer(colonyReducer, initialColony);
+  const [colony, dispatch] = useReducer(colonyReducer, localStorage, startingColony);
   const [paused, setPaused] = useState(false);
   //const [expeditionPending, setExpeditionPending] = useState(false);
 
@@ -17,6 +18,11 @@ export function ColonyProvider({ children }: { children: ReactNode }) {
     awaitingAcknowledgement(colony) ||
     openRaid(colony) !== null ||
     hasStarved(colony);
+
+  // D5: save after every change of the colony.
+  useEffect(() => {
+    saveColony(colony, localStorage);
+  }, [colony]);
 
   useEffect(() => {
     if (clockStopped) return;

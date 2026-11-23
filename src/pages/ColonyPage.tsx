@@ -232,6 +232,11 @@ export function ColonyPage() {
             residents may travel at once, but each only once. With no answer after 10
             seconds the expedition fails: no rewards, and the scout returns home.
           </p>
+          <p>
+            💾 Progress is saved automatically. After a page refresh, an
+            expedition still on the road counts as failed (no loot, no raid);
+            forge work continues where it stopped.
+          </p>
         </section>
 
         <Chronicle
