@@ -15,6 +15,7 @@ export interface ColonyContextValue {
   sendExpedition: (dwarfId: string, destination: string) => Promise<void>;
   acknowledgeActivity: (activityId: string) => void;
   restartColony: () => void;
+  dismissRaid: () => void;
 }
 
 export const ColonyContext = createContext<ColonyContextValue | null>(null);

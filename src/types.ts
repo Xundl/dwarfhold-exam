@@ -62,6 +62,20 @@ export interface ColonyState {
     activityCount: number;
     /** D4: expeditions that have left and are still waiting for an answer. */
     expeditions: PendingExpedition[];
+    /** D7: attack reports the player has not read yet, oldest first. The day clock stands still while one is open. */
+    raids: RaidReport[];
+}
+
+/** D7: the outcome of one goblin attack, shown full screen until the player continues. */
+export interface RaidReport {
+    /** Name of the traveller the goblins followed home. */
+    scout: string;
+    defended: boolean;
+    weaponsBefore: number;
+    /** Weapons broken in a successful defence, otherwise 0. */
+    weaponsLost: number;
+    /** What the goblins carried off; all zero after a successful defence. */
+    loot: { wood: number; stone: number; food: number };
 }
 
 /** D4: one expedition on its way. Its id lets us apply the answer exactly once. */

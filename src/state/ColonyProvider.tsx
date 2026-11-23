@@ -1,6 +1,7 @@
 import { useEffect, useReducer, useState, type ReactNode } from "react";
 import { awaitingAcknowledgement } from "../activityLog";
 import { beginExpedition } from "../api";
+import { openRaid } from "../raid";
 import { hasStarved, isAvailable } from "../simulation";
 import { ColonyContext, type ColonyContextValue } from "./ColonyContext";
 import { colonyReducer, initialColony } from "./colonyReducer";
@@ -10,9 +11,12 @@ export function ColonyProvider({ children }: { children: ReactNode }) {
   const [paused, setPaused] = useState(false);
   //const [expeditionPending, setExpeditionPending] = useState(false);
 
-  // The day clock stops for a manual pause, an unacknowledged strike report, or a starved colony.
+  // The day clock stops for a manual pause, an unread strike or raid report, or a starved colony.
   const clockStopped =
-    paused || awaitingAcknowledgement(colony) || hasStarved(colony);
+    paused ||
+    awaitingAcknowledgement(colony) ||
+    openRaid(colony) !== null ||
+    hasStarved(colony);
 
   useEffect(() => {
     if (clockStopped) return;
@@ -65,6 +69,7 @@ export function ColonyProvider({ children }: { children: ReactNode }) {
     acknowledgeActivity: (activityId) =>
       dispatch({ type: "activityAcknowledged", activityId }),
     restartColony: () => dispatch({ type: "colonyRestarted" }),
+    dismissRaid: () => dispatch({ type: "raidAcknowledged" }),
   };
 
   return <ColonyContext value={value}>{children}</ColonyContext>;

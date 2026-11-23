@@ -10,6 +10,11 @@ import {
   mealsNeeded,
   toolBonus,
 } from "../simulation";
+import {
+  RAID_DESTINATION,
+  WEAPONS_LOST_IN_DEFENCE,
+  WEAPONS_TO_DEFEND,
+} from "../raid";
 import { hasNewcomerJoined, newcomer, yieldOf } from "../species";
 import { useColony } from "../state/ColonyContext";
 
@@ -187,8 +192,29 @@ export function ColonyPage() {
               <option value="crystal-cave">Crystal Cave</option>
               <option value="old-mine">The Old Mine</option>
               <option value="blocked-pass">Blocked Pass</option>
+              <option value={RAID_DESTINATION}>Goblin Warren ⚠</option>
             </select>
           </label>
+
+          {destination === RAID_DESTINATION && (
+            <p
+              className={
+                colony.resources.weapons >= WEAPONS_TO_DEFEND
+                  ? "raid-warning ready"
+                  : "raid-warning"
+              }
+            >
+              ⚠ Rich pickings (timber and rations), but on success goblins
+              follow the scout home and attack at once. With{" "}
+              {WEAPONS_TO_DEFEND} or more weapons Stonehome defends itself and{" "}
+              {WEAPONS_LOST_IN_DEFENCE} weapon breaks. With fewer, the goblins
+              loot half of the stored timber, stone and rations. Weapons in
+              the armoury: <b>{colony.resources.weapons}</b>
+              {colony.resources.weapons >= WEAPONS_TO_DEFEND
+                ? " (ready to defend)."
+                : " (not enough)."}
+            </p>
+          )}
 
           <button
             disabled={!scoutAvailable}
