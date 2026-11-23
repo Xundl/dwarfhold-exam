@@ -1,6 +1,7 @@
 import { logActivity } from "./activityLog";
 import { stowTool } from "./equipment";
 import { homeStatus, isAvailable } from "./simulation";
+import { welcomeNewcomer } from "./species";
 import type { ColonyState, ExpeditionResult, ResourceKey } from "./types";
 
 /*
@@ -69,7 +70,10 @@ export function completeExpedition(
     resources[key as ResourceKey] += amount ?? 0;
   });
 
-  return logActivity({ ...ended.next, resources }, result.message, "good");
+  const rewarded = logActivity({ ...ended.next, resources }, result.message, "good");
+
+  // D6: the first success at the right destination brings the elf to Stonehome.
+  return welcomeNewcomer(rewarded, ended.expedition.destination);
 }
 
 /** A failed expedition gives no reward and brings the dwarf back home. */

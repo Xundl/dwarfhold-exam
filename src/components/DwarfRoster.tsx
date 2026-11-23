@@ -1,5 +1,6 @@
 import { canReturnTool } from "../equipment";
 import { isAtHome, jobLabel } from "../simulation";
+import { jobResource, speciesInfo, traits, yieldOf } from "../species";
 import type { Dwarf, JobType } from "../types";
 
 const jobs: Exclude<JobType, null>[] = [
@@ -64,16 +65,22 @@ export function DwarfRoster({
               className={isAway ? "dwarf away" : "dwarf"}
               key={dwarf.id}
             >
-              <div className="portrait">
+              <div className={`portrait kin-${dwarf.species}`}>
                 {dwarf.icon}
                 <i className={onStrike ? "strike" : dwarf.status} />
               </div>
 
               <div className="dwarf-details">
-                <h3>{dwarf.name}</h3>
+                <h3>
+                  {dwarf.name}
+                  <span className={`species kin-${dwarf.species}`}>
+                    {speciesInfo[dwarf.species].label}
+                  </span>
+                </h3>
                 <p>
                   {dwarf.title} · {specialty}
                 </p>
+                <p className="traits">{traits(dwarf.species)}</p>
 
                 <div
                   className={dwarf.hungry ? "hunger empty" : "hunger"}
@@ -97,7 +104,7 @@ export function DwarfRoster({
                   <option value="">Unassigned</option>
                   {jobs.map((job) => (
                     <option value={job} key={job}>
-                      {jobLabel(job)}
+                      {jobLabel(job)} (+{yieldOf(dwarf, job)} {jobResource[job]})
                     </option>
                   ))}
                 </select>

@@ -8,9 +8,9 @@ import {
   isAvailable,
   jobLabel,
   mealsNeeded,
-  production,
   toolBonus,
 } from "../simulation";
+import { hasNewcomerJoined, newcomer, yieldOf } from "../species";
 import { useColony } from "../state/ColonyContext";
 
 export function ColonyPage() {
@@ -62,7 +62,6 @@ export function ColonyPage() {
 
           <div className="job-grid">
             {(["woodcutting", "mining", "farming"] as const).map((job) => {
-              const perWorker = Object.values(production[job])[0] ?? 0;
               const assigned = colony.dwarves.filter(
                 (dwarf) => dwarf.assignment === job,
               ).length;
@@ -70,6 +69,11 @@ export function ColonyPage() {
                 (dwarf) => activeJob(dwarf) === job,
               );
               const working = workers.length;
+              // D6: every worker brings their own species value.
+              const base = workers.reduce(
+                (sum, dwarf) => sum + yieldOf(dwarf, job),
+                0,
+              );
               const forging = colony.dwarves.filter(
                 (dwarf) =>
                   dwarf.assignment === job && dwarf.status === "crafting",
@@ -101,7 +105,7 @@ export function ColonyPage() {
                     {forging > 0 ? ` · ${forging} forging` : ""}
                   </p>
                   <strong>
-                    +{working * perWorker + fromTools} / day
+                    +{base + fromTools} / day
                     {fromTools > 0 ? ` · incl. +${fromTools} from tools` : ""}
                   </strong>
                 </article>
@@ -132,13 +136,13 @@ export function ColonyPage() {
             )
           )}
           <p className="rule-note">
-            Only dwarves at home with a job produce; a dwarf at the forge
-            produces nothing meanwhile. A tool gives its carrier +1 per day in
-            any job. Each evening everyone
-            eats 1 food, travellers included. A dwarf who gets no meal is
-            hungry and refuses all work until fed; hungry dwarves are served
-            first. If everyone is hungry and the stores are empty, Stonehome
-            has starved.
+            Only residents at home with a job produce; how much depends on
+            their kind (see the roster). A resident at the forge produces
+            nothing meanwhile. A tool gives its carrier +1 per day in any job.
+            Each evening everyone eats 1 food, travellers included. Whoever
+            gets no meal is hungry and refuses all work until fed; the hungry
+            are served first. If everyone is hungry and the stores are empty,
+            Stonehome has starved.
           </p>
         </section>
       </section>
@@ -192,10 +196,15 @@ export function ColonyPage() {
           >
             {scoutAway ? "Beyond the gate…" : "Send expedition"}
           </button>
+          <p className="rumour">
+            {hasNewcomerJoined(colony)
+              ? `✦ ${newcomer.name} joined Stonehome from the Crystal Cave.`
+              : "✦ Rumour: a stranger was seen among the glowing crystals of the Crystal Cave. A successful expedition there may bring a new resident."}
+          </p>
           <p>
-            The selected dwarf is unavailable while travelling. Several dwarves
-            may travel at once, but each only once. With no answer after 10
-            seconds the expedition fails: no rewards, and the dwarf returns home.
+            The selected scout is unavailable while travelling. Several
+            residents may travel at once, but each only once. With no answer after 10
+            seconds the expedition fails: no rewards, and the scout returns home.
           </p>
         </section>
 

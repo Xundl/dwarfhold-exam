@@ -6,7 +6,7 @@ import { colonyReducer, initialColony } from "./state/colonyReducer";
 import type { ColonyState, Dwarf, Job } from "./types";
 
 const dwarf = (id: string, overrides: Partial<Dwarf> = {}): Dwarf => ({
-  id, name: id, title: "", icon: "", assignment: null, status: "idle", hungry: false, hasTool: false, ...overrides,
+  id, name: id, title: "", icon: "", species: "dwarf", assignment: null, status: "idle", hungry: false, hasTool: false, ...overrides,
 });
 
 const colony = (overrides: Partial<ColonyState> = {}): ColonyState => ({

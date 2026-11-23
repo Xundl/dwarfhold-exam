@@ -1,5 +1,6 @@
 import { logActivity } from "./activityLog";
 import { homeStatus } from "./dwarves";
+import { canForge, speciesInfo } from "./species";
 import type { ColonyState, Dwarf, RecipeId } from "./types";
 
 export type { RecipeId } from "./types";
@@ -24,7 +25,7 @@ export const recipes: Record<RecipeId, Recipe> = {
     cost: { wood: 3, stone: 2 },
     days: 1,
     product: "tools",
-    purpose: "Equip it to a dwarf: +1 per day in their job.",
+    purpose: "Equip it to a resident: +1 per day in their job.",
     done: "A sturdy iron tool joins the stores.",
   },
   weapon: {
@@ -54,6 +55,10 @@ export function craftingProblem(
   const { cost } = recipes[recipeId];
 
   if (!dwarf) return "Choose a smith.";
+  // D6: a limit of the species comes first, because waiting or more materials will not change it.
+  if (!canForge(dwarf, recipeId)) {
+    return `${speciesInfo[dwarf.species].plural} do not forge ${recipes[recipeId].label.toLowerCase()}s.`;
+  }
   if (dwarf.status === "crafting") return `${dwarf.name} is already forging.`;
   if (dwarf.status === "expedition") return `${dwarf.name} is away on an expedition.`;
   if (dwarf.hungry) return `${dwarf.name} is on strike.`;
