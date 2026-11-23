@@ -6,6 +6,7 @@ import {
   recipes,
   type RecipeId,
 } from "../forge";
+import { speciesInfo } from "../species";
 import { useColony } from "../state/ColonyContext";
 
 export function ForgePage() {
@@ -31,6 +32,9 @@ export function ForgePage() {
               {colony.dwarves.map((dwarf) => (
                 <option key={dwarf.id} value={dwarf.id}>
                   {dwarf.name}
+                  {dwarf.species === "dwarf"
+                    ? ""
+                    : ` · ${speciesInfo[dwarf.species].label.toLowerCase()}`}
                   {dwarf.status === "crafting"
                     ? " (forging)"
                     : dwarf.status === "expedition"
@@ -43,9 +47,10 @@ export function ForgePage() {
             </select>
           </label>
           <p>
-            Forging needs materials, a free dwarf and time. The materials are
-            taken when the work starts. The smith leaves their job until the
-            item is ready, and a hungry smith pauses.
+            Forging needs materials, a free resident and time. The materials
+            are taken when the work starts. The smith leaves their job until
+            the item is ready, and a hungry smith pauses. Dwarves forge tools
+            and weapons; elves forge tools only.
           </p>
         </section>
 

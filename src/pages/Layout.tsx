@@ -106,7 +106,7 @@ export function Layout() {
           <h2 id="game-over-title">Game over</h2>
           <strong>Stonehome has starved</strong>
           <p>
-            The stores are empty and every dwarf is hungry, so nobody will
+            The stores are empty and everyone is hungry, so nobody will
             farm again. The colony is lost.
           </p>
           <button autoFocus onClick={restartColony}>

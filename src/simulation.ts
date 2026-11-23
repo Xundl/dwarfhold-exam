@@ -2,21 +2,17 @@ import { logActivity } from "./activityLog";
 import { homeStatus, isAtHome } from "./dwarves";
 import { TOOL_BONUS } from "./equipment";
 import { recipes, workAtForge } from "./forge";
+import { jobResource, yieldOf } from "./species";
 import type {
   ColonyState,
   Dwarf,
   Job,
   JobType,
-  ResourceKey,
   Resources,
 } from "./types";
 
 // Kept here as well so existing imports from "./simulation" keep working.
 export { homeStatus, isAtHome, isAvailable } from "./dwarves";
-
-export const production: Record<Job, Partial<Resources>> = {
-  woodcutting: { wood: 3 }, mining: { stone: 2 }, farming: { food: 4 },
-};
 
 /**
  * The job a dwarf really performs today, or null.
@@ -39,9 +35,8 @@ export function expectedProduction(state: ColonyState): Resources {
     const job = activeJob(dwarf);
     if (!job) return;
 
-    Object.entries(production[job]).forEach(([resource, amount]) => {
-      total[resource as ResourceKey] += (amount ?? 0) + toolBonus(dwarf);
-    });
+    // D6: the base amount depends on the species; the tool bonus is the same for everyone.
+    total[jobResource[job]] += yieldOf(dwarf, job) + toolBonus(dwarf);
   });
 
   return total;
@@ -109,7 +104,7 @@ export function advanceDay(state: ColonyState): ColonyState {
   });
 
   if (hasStarved(next)) {
-    return logActivity(next, "The stores are empty and every dwarf is hungry. Stonehome has starved.", "warning");
+    return logActivity(next, "The stores are empty and everyone is hungry. Stonehome has starved.", "warning");
   }
 
   state.dwarves.forEach((before, index) => {

@@ -2,6 +2,8 @@ export type ResourceKey = "wood" | "stone" | "food" | "tools" | "weapons";
 export type Job = "woodcutting" | "mining" | "farming";
 export type JobType = Job | null;
 export type RecipeId = "tool" | "weapon";
+/** D6: what kind of resident someone is. The differences live in the table in species.ts. */
+export type Species = "dwarf" | "elf";
 
 /**
  * The ONE thing a dwarf is doing right now (D1: at most one activity at a time).
@@ -20,9 +22,14 @@ export interface CraftingTask {
 /** "tools" counts the free tools in the stores; equipped tools are held by a dwarf (hasTool). */
 export interface Resources { wood: number; stone: number; food: number; tools: number; weapons: number }
 
+/**
+ * One resident of Stonehome. The type keeps its starter name "Dwarf", and the list is still
+ * called "dwarves", but since D6 a resident can also be an elf: see the species field.
+ */
 export interface Dwarf {
     id: string;
     name: string;
+    species: Species;
     title: string;
     icon: string;
     /** The local job the dwarf does while at home. Kept during an absence so the dwarf resumes it afterwards. */
